@@ -31,37 +31,40 @@ def check_tables_postgresql():
     
     return result
 
-def airbnb_postgresql_process(table):
+def create_table_process_postgresql(tables):
     global conn
 
     cursor = conn.cursor()
-    if table == []:
-        sentence_1 = f"""create table public.airbnb_listings(id int4 primary key not null,host_id int4 not null,host_name varchar(100),host_neighbourdhood text,host_listings_count int4,city varchar(100),country varchar(50),property_type varchar(50),room_type varchar (50),price int4,security_deposit int4, 	cleaning_fee int4, 	number_reviews int4, 	review_score int4, 	cancellation_policy varchar(30));"""
+    
+    if tables:
+
+        logger.info(f'Creating temporal tables in BD....')
+
+        sentence_1 = f"""create table public.airbnb_listings_temp( 	id int4 primary key not null, 	host_id int4 not null, 	host_name varchar(100), 	host_neighbourhood text, 	host_listings_count int4, 	city varchar(100), 	country varchar(50), 	property_type varchar(50), 	room_type varchar (50), 	price int4, 	security_deposit int4, 	cleaning_fee int4, 	number_of_reviews int4, 	review_scores_value int4, 	cancellation_policy varchar(30));"""
+        cursor.execute(sentence_1)
+
+        sentence_2 = f"""create table public.flat_information_temp( 	host_id int4 not null primary key, 	tv int4, 	cable_tv int4, 	kitchen int4, 	smoking_allowed int4, 	pets_allowed int4, 	heating int4, 	washer int4, 	dryer int4, 	checkin_24h int4);"""
+        cursor.execute(sentence_2)
+
+        sentence_3 = f"""create table public.airbnb_secondary_information_temp( host_id int4 not null primary key, street text, zipcode text, country_code varchar(4), latitude float, longitude float, bedrooms int4, beds int, weekly_price int4, monthly_price int4, minimum_nights int4, review_scores_accuracy int4, review_scores_cleanliness int4, review_scores_checkin int4, review_scores_communication int4, review_scores_location int4 );"""
+        cursor.execute(sentence_3)
+
+        conn.commit()
+    
+    else:
+        logger.info(f'Creating new tables in BD....')
+
+        sentence_1 = f"""create table public.airbnb_listings( 	id int4 primary key not null, 	host_id int4 not null, 	host_name varchar(100), 	host_neighbourhood text, 	host_listings_count int4, 	city varchar(100), 	country varchar(50), 	property_type varchar(50), 	room_type varchar (50), 	price int4, 	security_deposit int4, 	cleaning_fee int4, 	number_of_reviews int4, 	review_scores_value int4, 	cancellation_policy varchar(30));"""
         cursor.execute(sentence_1)
 
         sentence_2 = f"""create table public.flat_information( 	host_id int4 not null primary key, 	tv int4, 	cable_tv int4, 	kitchen int4, 	smoking_allowed int4, 	pets_allowed int4, 	heating int4, 	washer int4, 	dryer int4, 	checkin_24h int4);"""
         cursor.execute(sentence_2)
 
-        sentence_3 = f"""create table public.airbnb_secondary_information( host_id int4 not null primary key, street text, zipcode int4, country_code varchar(4), latitude float, longitud float, bedrooms int4, beds int, weekly_price int4, monthly_price int4, minimun_nights int4, review_score_accuracy int4, review_score_cleanliness int4, review_score_checkin int4, review_score_communitcation int4, review_score_location int4 );"""
+        sentence_3 = f"""create table public.airbnb_secondary_information( host_id int4 not null primary key, street text, zipcode text, country_code varchar(4), latitude float, longitude float, bedrooms int4, beds int, weekly_price int4, monthly_price int4, minimum_nights int4, review_scores_accuracy int4, review_scores_cleanliness int4, review_scores_checkin int4, review_scores_communication int4, review_scores_location int4 );"""
         cursor.execute(sentence_3)
 
         conn.commit()
-
-    if table != []:
-        sentence_1 = f"""create table public.airbnb_listings_temp(id int4 primary key not null,host_id int4 not null,host_name varchar(100),host_neighbourdhood text,host_listings_count int4,city varchar(100),country varchar(50),property_type varchar(50),room_type varchar (50),price int4,security_deposit int4, 	cleaning_fee int4, 	number_reviews int4, 	review_score int4, 	cancellation_policy varchar(30));"""
-        cursor.execute(sentence_1)
-
-        sentence_2 = f"""create table public.flat_information_temp(host_id int4 not null primary key, 	tv int4, 	cable_tv int4, 	kitchen int4, 	smoking_allowed int4, 	pets_allowed int4, 	heating int4, 	washer int4, 	dryer int4, 	checkin_24h int4);"""
-        cursor.execute(sentence_2)
-
-        sentence_3 = f"""create table public.airbnb_secondary_information_temp( host_id int4 not null primary key, street text, zipcode int4, country_code varchar(4), latitude float, longitud float, bedrooms int4, beds int, weekly_price int4, monthly_price int4, minimun_nights int4, review_score_accuracy int4, review_score_cleanliness int4, review_score_checkin int4, review_score_communitcation int4, review_score_location int4 );"""
-        cursor.execute(sentence_3)
-
-        #INSERT DATA IN NEW TEMP TABLES
-        conn.commit()
-
-
-
+       
 
 def download_airbnb_dataset_csv():
 
@@ -76,7 +79,7 @@ def download_airbnb_dataset_csv():
     t1 = time.time()
     logger.info(f"Download time: {round(t1 - t0, 2)}")
 
-def save_data_postgresql(data, table):
+def save_data_postgresql(data, table, tables):
 
     t0 = time.time()
     logger.info(f'Process {table} data....' )
@@ -102,7 +105,11 @@ def save_data_postgresql(data, table):
 
     logger.info(f'Total files processed: {ix}')
     values = "),(".join(new_data)
-    sentence = f"INSERT INTO {table} ({columns}) VALUES ({values}) ON CONFLICT DO NOTHING" 
+    if tables:
+        sentence = f"INSERT INTO {table}_temp ({columns}) VALUES ({values}) ON CONFLICT DO NOTHING" 
+    else: 
+        sentence = f"INSERT INTO {table} ({columns}) VALUES ({values}) ON CONFLICT DO NOTHING" 
+    
     cursor.execute(sentence)
     conn.commit()
     new_data = []
@@ -110,8 +117,18 @@ def save_data_postgresql(data, table):
     t1 = time.time()
     logger.info(f'Total time procese: {t1 - t0}')
 
+    if tables:
+        sentence_drop = f"""DROP TABLE {table}"""
+        logger.info(f'{sentence_drop}')
+        cursor.execute(sentence_drop)
 
-def create_csv_files():
+        sentence_rename = f"""ALTER TABLE {table}_temp RENAME TO {table}"""
+        logger.info(f"{sentence_rename}")
+        cursor.execute(sentence_rename)
+
+        conn.commit()
+    
+def create_csv_files(tables):
 
     logger.info(f"Getting the main information....")
     t0 = time.time()
@@ -121,16 +138,19 @@ def create_csv_files():
     airbnb_listings = df[['ID', 'Host ID', 'Host Name', 'Host Neighbourhood', 'Host Listings Count', 'City', 'Country', 'Property Type', 'Room Type', 'Price', 'Security Deposit', 'Cleaning Fee', 'Number of Reviews', 'Review Scores Value', 'Cancellation Policy']]
     airbnb_listings = airbnb_listings.drop_duplicates(keep='last')
     airbnb_listings.to_csv('airbnb_listings_mod.csv', index = False, sep = ';')
-    save_data_postgresql(airbnb_listings, 'airbnb_listings')
+    save_data_postgresql(airbnb_listings, 'airbnb_listings', tables)
 
     flat_information = df[['Host ID','Amenities']]
     flat_information = flat_information.drop_duplicates(keep='last')
-    process_info(flat_information) #Similar to create csv.
+    flat_information = process_info(flat_information) 
+    flat_information.to_csv('flat_information.csv', index = False, sep = ';')
+    save_data_postgresql(flat_information,'flat_information',tables)
 
 
     airbnb_secondary_information = df[['Host ID','Street', 'Zipcode', 'Country Code', 'Latitude', 'Longitude', 'Bedrooms', 'Beds', 'Weekly Price', 'Monthly Price', 'Minimum Nights', 'Review Scores Accuracy', 'Review Scores Cleanliness', 'Review Scores Checkin', 'Review Scores Communication', 'Review Scores Location']]
+    airbnb_secondary_information = airbnb_secondary_information.drop_duplicates(keep='last')
     airbnb_secondary_information.to_csv('airbnb_secondary_information.csv', index = False, sep = ';')
-    save_data_postgresql(airbnb_secondary_information,'airbnb_secondary_information')
+    save_data_postgresql(airbnb_secondary_information,'airbnb_secondary_information',tables)
     logger.info(f"Creating the news csv files....")
 
 
@@ -247,8 +267,8 @@ def process_info(df):
 
     df = pd.DataFrame(new_data)
     df = df.drop_duplicates(keep='last')
-    df.to_csv('flat_information.csv', index = False, sep = ';')
-    save_data_postgresql(df,'flat_information')
+    
+    return df
 
 def main():
     
@@ -269,9 +289,10 @@ def main():
 
     t0 = time.time()
     init_postgresql(config)
-    #check_tables_postgresql()
+    tables = check_tables_postgresql()
+    create_table_process_postgresql(tables)
     download_airbnb_dataset_csv()
-    create_csv_files()
+    create_csv_files(tables)
     check_old_files_google_storage()
     upload_google_storage_connection()
     delete_local_csv()
