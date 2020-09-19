@@ -6,7 +6,6 @@ import csv
 import logging
 import time
 import os
-from os import listdir
 import psycopg2
 import argparse
 
@@ -251,11 +250,7 @@ def process_info(df):
         else:
             dictionary['Washer'] = 0
         if 'Dryer' in row:
-            dictionary['Washer'] = 1
-        else:
-            dictionary['Washer'] = 0
-        if 'Dryer' in row:
-            dictionary['Dryer'] = 1 
+            dictionary['Dryer'] = 1
         else:
             dictionary['Dryer'] = 0
         if '24-hour check-in' in row:
