@@ -10,7 +10,7 @@ And finally, give information in an orderly manner to customers who are interest
 ### Diagram.  Architecture BigData.
 The original idea is to mount a BigData architecture whose processes work automatically. 
 
-The idea is to use tools given by google coud to automate the whole process. 
+The idea is to use tools given by google cloud to automate the whole process. 
 
 For this, it is necessary a bucket, a SQL DB (postgresql in this case) and the use of function cloud, scheduler cloud and a cluster that turns on only when necessary.
 
@@ -20,8 +20,10 @@ The process is divided in three parts:
 	 - Python code: Get the main information of the .csv .
 	 - Save the news .csv processed in our bucket in Google Cloud Storage.
 
+
  - Block 2. Transform Data.
 	 - Get the .csv files from the bucket and give them the correct format to save them in SQL.
+
  - Block 3. Load Data.
 	 - Create the new tables or replace them if already exists.
 	 - Load data in the news tables.
@@ -40,7 +42,7 @@ Airbnb let us get the information about all the listenings, reviews, comments ab
 We can find all the datasets in this link: [airbnb dataset](https://public.opendatasoft.com/explore/dataset/airbnb-listings/export/?disjunctive.host_verifications&disjunctive.amenities&disjunctive.features&q=Madrid&dataChart=eyJxdWVyaWVzIjpbeyJjaGFydHMiOlt7InR5cGUiOiJjb2x1bW4iLCJmdW5jIjoiQ09VTlQiLCJ5QXhpcyI6Imhvc3RfbGlzdGluZ3NfY291bnQiLCJzY2llbnRpZmljRGlzcGxheSI6dHJ1ZSwiY29sb3IiOiJyYW5nZS1jdXN0b20ifV0sInhBeGlzIjoiY2l0eSIsIm1heHBvaW50cyI6IiIsInRpbWVzY2FsZSI6IiIsInNvcnQiOiIiLCJzZXJpZXNCcmVha2Rvd24iOiJyb29tX3R5cGUiLCJjb25maWciOnsiZGF0YXNldCI6ImFpcmJuYi1saXN0aW5ncyIsIm9wdGlvbnMiOnsiZGlzanVuY3RpdmUuaG9zdF92ZXJpZmljYXRpb25zIjp0cnVlLCJkaXNqdW5jdGl2ZS5hbWVuaXRpZXMiOnRydWUsImRpc2p1bmN0aXZlLmZlYXR1cmVzIjp0cnVlfX19XSwidGltZXNjYWxlIjoiIiwiZGlzcGxheUxlZ2VuZCI6dHJ1ZSwiYWxpZ25Nb250aCI6dHJ1ZX0%3D&location=16,41.38377,2.15774&basemap=jawg.streets).
 There two ways to download the information. Using the ApiKey or the easier way, download a .csv file.
 
-The first objetive was, analyze the dataset and see which was the main information. 
+The first objetive was analyze the dataset and see which was the main information. 
 
 So, i made a list with the main fields and i saw that i could divide the information in: global information of the houses, personal information of each house and secondary information which could be interested for the costumer.
 
@@ -98,7 +100,7 @@ I decided not create a NoSQL database. I think it was unncessary, it's enaught t
 ###	Second point. Python code. ETL.
 All the process. Since download the airbnb_dataset.csv until save the data in SQL, it has done with python.
 The best way to execute this part, it would be with a function cloud, which execute the scipt when an scheduler uses an url to 
-So, the process consists of:
+execute the script, the process consists of:
 
  1. Download the airbnb_dataset.csv using the library 'request'.
 
@@ -107,8 +109,9 @@ So, the process consists of:
 	 - Process and change the structure of the data if it's necessary.
 	 - Delete the rows which contains null values. 
 	 - Write news .csv to keep them in the bucket.
+
 	 
-	 
+
  3. Save the news .csv files in the bucket. You have to connect with you Google Cloud Storage. There are several ways. You can use a key.json or google.auth or with apiKey.
 	  
  4. Create new tables in our SQL Database.If the tables don't exists, the script create the tables. And if the tables already exists, I create temporary tables that are the same as the tables that already exist. Then I load the new data into the temporary tables and finally I replace the temporary tables with the old ones. 
