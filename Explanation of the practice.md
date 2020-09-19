@@ -108,6 +108,7 @@ So, the process consists of:
 	 - Delete the rows which contains null values. 
 	 - Write news .csv to keep them in the bucket.
 	 
+	 
  3. Save the news .csv files in the bucket. You have to connect with you Google Cloud Storage. There are several ways. You can use a key.json or google.auth or with apiKey.
 	  
  4. Create new tables in our SQL Database.If the tables don't exists, the script create the tables. And if the tables already exists, I create temporary tables that are the same as the tables that already exist. Then I load the new data into the temporary tables and finally I replace the temporary tables with the old ones. 
